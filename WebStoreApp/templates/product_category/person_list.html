@@ -1,0 +1,26 @@
+{% extends 'base.html'%}
+
+{%block title%}
+    Product list
+{%endblock title%}
+
+{%block content%}
+    <table>
+        
+        <thead>
+            <tr>
+                <th>COD</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prod in products %}
+                <tr>
+                    <td>{{prod.pk}}</td>
+                    <td>{{prod.name}}</td>
+                </tr>
+            {% endfor %}
+        </tbody> 
+    </table>
+
+{%endblock content%}

@@ -1,0 +1,14 @@
+{% extends 'templates/base.html' %}
+{% block title %}
+    Person Register
+{% endblock %}
+
+{% block content %}
+    <form action="" method="post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit" >
+            Save
+        </button>
+    </form>
+{% endblock%}
