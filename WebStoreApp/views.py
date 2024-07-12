@@ -61,7 +61,10 @@ def story_home(request, template_name='story/home.html'):
 def product_details(request, pk, template_name='story/product_details.html'):
     #product = get_object_or_404(Product, pk=pk)
     product = None
-    return render(request, template_name, {'element': product})
+    reviews =  [
+        {'rating':5, 'user':'Test', 'comment':'Test'}
+    ] 
+    return render(request, template_name, {'element': product, 'reviews':reviews})
 
 def brand_list(request, template_name='product_brand/brand_list.html'):
     query = request.GET.get('search')
