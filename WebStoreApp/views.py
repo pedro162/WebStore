@@ -4,6 +4,10 @@ from django.http import HttpResponse
 from .models import *
 from django import forms
 import random
+from WebStoreApp.Infraestructure.Persistence.ProductBrandRepository import ProductBrandRepository 
+from WebStoreApp.Application.Services.ProductBrandApplicationService import ProductBrandApplicationService
+from WebStoreApp.Application.Commands.CreateProductBrandCommand import CreateProductBrandCommand
+from WebStoreApp.Application.Handlers.CreateProductBrandHandler import CreateProductBrandHandler
 # Create your views here.
 
 class PersonForm(ModelForm):
@@ -70,21 +74,42 @@ def brand_list(request, template_name='product_brand/brand_list.html'):
 
 
 def brand_create(request, template_name="product_brand/brand_form.html"):
+    
+    brand_handler = CreateProductBrandHandler(ProductBrandRepository())
+    brand_service = ProductBrandApplicationService()
+    brand_service.create_brand_handler=brand_handler
+
+    
     form = ProductBrandForm(request.POST or None)
     if form.is_valid():
-        prod_brand = form.save(commit=False)
-        prod_brand.active='1'
-        prod_brand.save()
+        #prod_brand = form.save(commit=False)
+        #prod_brand.active='1'
+        #prod_brand.save()
+        
+        name = form.cleaned_data['name']
+        brand_command = CreateProductBrandCommand()
+        brand_command.id = None
+        brand_command.name = name
+        brand = brand_service.create_brand(brand_command)
         return redirect('brand_list')
     
     return render(request, template_name, {'form': form})
 
 def brand_edit(request, pk, template_name='product_brand/brand_form.html'):
     brand = get_object_or_404(ProductBrand, pk=pk)
+    brand_handler = CreateProductBrandHandler(ProductBrandRepository())
+    brand_service = ProductBrandApplicationService()
+    brand_service.create_brand_handler=brand_handler
+
     if request.method == 'POST':
         form = ProductBrandForm(request.POST, instance=brand)
         if form.is_valid():
-            form.save()
+            name = form.cleaned_data['name']
+            brand_command = CreateProductBrandCommand()
+            brand_command.id = pk
+            brand_command.name = name
+            brand = brand_service.create_brand(brand_command)
+            #form.save()
             return redirect('brand_list')
     else:
         form = ProductBrandForm(instance=brand)

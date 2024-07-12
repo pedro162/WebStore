@@ -1,0 +1,2 @@
+class ProductBrandHelper:
+    pass
