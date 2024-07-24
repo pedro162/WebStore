@@ -6,13 +6,13 @@ from django.db import models
 
 class User(models.Model):
     VERIFIED_USER = [
-        ('1','Yes'),
-        ('0','No'),
+        (1,'Yes'),
+        (0,'No'),
     ]
 
     ACTIVE_STORE = [
-        ('1','Yes'),
-        ('0','No'),
+        (1,'Yes'),
+        (0,'No'),
     ]
 
     email = models.CharField(max_length=500, null=False, help_text="The user's email")
@@ -25,8 +25,8 @@ class User(models.Model):
 
 class BaseModel(models.Model):
     ACTIVE_STORE = [
-        ('1','Yes'),
-        ('0','No'),
+        (1,'Yes'),
+        (0,'No'),
     ]
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -43,6 +43,8 @@ class BaseModel(models.Model):
 
 class Gender(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The gender's name")
+    def __str__(self) -> str:
+        return self.name
 
 class Person(BaseModel):
     first_name = models.CharField(max_length=255, null=False, help_text="The person's first name")
@@ -50,11 +52,16 @@ class Person(BaseModel):
     social_name = models.CharField(max_length=255, null=True, blank=True, default=None, help_text="The person's social name")
     document = models.CharField(max_length=255, null=False, help_text="The person's document, like the person ID")
     gender_id = models.ForeignKey(Gender, on_delete=models.CASCADE)
-
+    
+    def __str__(self) -> str:
+        return self.first_name
+    
 class Branch(BaseModel):
-    root_id = models.ForeignKey('self',null=None, blank=True, help_text="The root branch id", on_delete=models.CASCADE)
+    root_id = models.ForeignKey('self',null=True, blank=True, help_text="The root branch id", on_delete=models.CASCADE)
     person_id = models.ForeignKey(Person, on_delete=models.CASCADE)
-
+    def __str__(self) -> str:
+        return self.person_id.first_name
+    
 class Country(BaseModel):
     name = models.CharField(max_length=500, null=False)
     code = models.CharField(max_length=100, null=True, blank=True, default=None)
@@ -80,6 +87,9 @@ class PersonAdress(BaseModel):
 class ProductUnit(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The unit's name")
 
+    def __str__(self) -> str:
+        return self.name
+
 class ProductPackage(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The package's name")
     product_unit_id = models.ForeignKey(ProductUnit, on_delete=models.CASCADE)
@@ -88,23 +98,32 @@ class ProductPackage(BaseModel):
 class ProductBrand(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The brand's name")
 
+    def __str__(self) -> str:
+        return self.name
+    
 class ProductDepartment(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The depart's name")
-
+    def __str__(self) -> str:
+        return self.name
+    
 class ProductCategory(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The category's name")
     product_depart_id = models.ForeignKey(ProductDepartment, on_delete=models.CASCADE,help_text="The product department table id")
-    product_category_id = models.ForeignKey('self', on_delete=models.CASCADE,null=None, blank=True, help_text="The product category table id")
-
+    product_category_id = models.ForeignKey('self', on_delete=models.CASCADE,null=True, blank=True, help_text="The product category table id")
+    def __str__(self) -> str:
+        return self.name
+    
 class Product(BaseModel):
     name = models.CharField(max_length=255, null=False, help_text="The product's name")
     product_brand_id = models.ForeignKey(ProductBrand, on_delete=models.CASCADE)
     product_category_id = models.ForeignKey(ProductCategory, on_delete=models.CASCADE,help_text="The product category table id")
-
+    def __str__(self) -> str:
+        return self.name
+    
 class Stock(BaseModel):
     DEFAULT_STOCK = [
-        ('1','Yes'),
-        ('0','No'),
+        (1,'Yes'),
+        (0,'No'),
     ]
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, null=True, help_text="The stock's name")
@@ -115,11 +134,14 @@ class Stock(BaseModel):
     fiscal_quantity = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Fiscal quantity in stock")
     branch_id = models.ForeignKey(Branch, on_delete=models.CASCADE,help_text="The branch table id")
     is_default = models.IntegerField(max_length=1, choices=DEFAULT_STOCK, default=0, help_text="The default stock")
-
+    
+    def __str__(self) -> str:
+        return self.name
+    
 class StockInventory(BaseModel):
     TYPE = [
-        ('1','Incoming'),
-        ('0','Outgoing'),
+        (1,'Incoming'),
+        (0,'Outgoing'),
     ]
     stock_id = models.ForeignKey(Stock, on_delete=models.CASCADE,help_text="The stock table id")
     previous_quantity = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Previous quantity in stock")
@@ -137,5 +159,52 @@ class Sale(BaseModel):
     sale_discount = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Sale discount amount")
     sale_shipping = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Sale shipping amount")
     sale_net_amount = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Total sale amount: product-discount+frete")
+
+
+class Review(BaseModel):
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    rating = models.IntegerField(choices=[(i, i) for i in range(1,6)])
+    comment = models.TextField()
+
+    def __str__(self) -> str:
+        return f'{self.rating} by {self.created_by_user_id}'
+        #return super().__str__()
+
+
+class Cart(models.Model):
+    products = models.ManyToManyField(Product, through='CartItem')
+
+class CartItem(models.Model):
+    cart_id = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=60, decimal_places=6, default=1)
+
+class ProductImage(BaseModel):
+    IS_DEFAULT = [
+        (1,'yes'),
+        (0,'no'),
+    ]
+
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/')
+    caption = models.CharField(max_length=200, blank=True, null=True)
+    is_default = models.IntegerField(max_length=1, choices=IS_DEFAULT, default=0, help_text="This is the default image?")
+    def __str__(self) -> str:
+        return f'{self.product_id.name} Image'
     
+class ProductPrice(BaseModel):
+    IS_DEFAULT = [
+        (1,'yes'),
+        (0,'no'),
+    ]
+
+    price = models.DecimalField(max_digits=60, decimal_places=6, default=0, null=True, help_text="Product price")
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='prices')
+    is_default = models.IntegerField(max_length=1, choices=IS_DEFAULT, default=0, help_text="This is the default price?")
+    
+    def formatted_price(self, locale='en_US'):
+        return f'${self.price:,.2f}'
+    
+    def __str__(self) -> str:
+        return f'{self.product_id.name} - {self.formatted_price()} Price'
 #https://docs.djangoproject.com/en/5.0/ref/models/fields/

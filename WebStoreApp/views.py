@@ -22,6 +22,14 @@ class ProductBrandForm(ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-input mt-1 block w-full px-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500', 'placeholder': 'Type the brand name'}),
         }
+class ReviewForm(ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets={
+            'rating':forms.RadioSelect(choices=[(i, f'{i} Star{"s" if i > 1 else ""}') for i in range(1, 6)]),
+            'comment':forms.Textarea(attrs={'class': 'form-textarea mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500', 'placeholder': 'Leave your comment'}),
+        }
 
 
 def person_store(request, template_name='person/person_form.html'):
@@ -45,26 +53,29 @@ def person_list(request, template_name='person/person_list.html'):
 def story_home(request, template_name='story/home.html'):
     query = request.GET.get('search')
     if query:
-        products = Person.objects.filter(first_name__icontains=query)
+        products = Product.objects.filter(first_name__icontains=query)
     else:
-        products = Person.objects.all()
+        products = Product.objects.all()
 
-    products = [
+    """ products = [
 
     ]
     for i in range(1,50):
         price = random.randint(20,99)
         products.append({"pk":i,'name': f'Product {i}', 'price': price, f'description':'Short product description'})
-
+    """
+    print(products)
     return render(request, template_name, {'products':products})
 
 def product_details(request, pk, template_name='story/product_details.html'):
-    #product = get_object_or_404(Product, pk=pk)
-    product = None
+    product = get_object_or_404(Product, pk=pk)
     reviews =  [
-        {'rating':5, 'user':'Test', 'comment':'Test'}
+        {'rating':5, 'user':{'username':'Pedro Aguiar'}, 'comment':'Test'}
     ] 
-    return render(request, template_name, {'element': product, 'reviews':reviews})
+
+    form = ReviewForm()
+
+    return render(request, template_name, {'element': product, 'reviews':reviews, 'form':form})
 
 def brand_list(request, template_name='product_brand/brand_list.html'):
     query = request.GET.get('search')

@@ -8,11 +8,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/starability@2.4.3/starability-minified/starability-all.min.css">
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!--https://tailwindcss.com/docs/container-->
     <title>
         {% block title %}
         {% endblock %}
     </title>
+    <style>
+        /* Estilos adicionais para o carrossel */
+        .carousel {
+            display: flex;
+            overflow-x: scroll;
+            scroll-snap-type: x mandatory;
+        }
+        .carousel-item {
+            flex: none;
+            scroll-snap-align: start;
+            margin-right: 8px; /* Reduzindo o espaço entre as imagens */
+        }
+        .carousel img {
+            width: 150px; /* Definindo uma largura fixa para as imagens */
+            height: 150px; /* Definindo uma altura fixa para as imagens */
+            object-fit: cover; /* Manter a proporção das imagens */
+        }
+    </style>
 </head>
 <body class="bg-gray-30 text-gray-800 flex flex-col min-h-screen">
     <header class="bg-white shadow">
@@ -35,7 +58,7 @@
     <footer class="bg-gray-800 text-white py-6 mt-10">
         <div class="container mx-auto px-4 text-center">
             <div class="container mx-auto px-4 text-center">
-                <p>&copy; 2024 Minha Loja. Todos os direitos reservados.</p>
+                <p>&copy; 2024 My Favorite Store. All rights reserved.</p>
             </div>
         </div>
     </footer>
