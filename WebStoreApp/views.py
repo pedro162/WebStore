@@ -8,6 +8,12 @@ from WebStoreApp.Infraestructure.Persistence.ProductBrandRepository import Produ
 from WebStoreApp.Application.Services.ProductBrandApplicationService import ProductBrandApplicationService
 from WebStoreApp.Application.Commands.CreateProductBrandCommand import CreateProductBrandCommand
 from WebStoreApp.Application.Handlers.CreateProductBrandHandler import CreateProductBrandHandler
+
+
+from WebStoreApp.Infraestructure.Persistence.ReviewRepository import ReviewRepository 
+from WebStoreApp.Application.Services.ReviewApplicationService import ReviewApplicationService
+from WebStoreApp.Application.Commands.CreateReviewCommand import CreateReviewCommand
+from WebStoreApp.Application.Handlers.CreateReviewHandler import CreateReviewHandler
 # Create your views here.
 
 class PersonForm(ModelForm):
@@ -57,25 +63,50 @@ def story_home(request, template_name='story/home.html'):
     else:
         products = Product.objects.all()
 
-    """ products = [
-
-    ]
-    for i in range(1,50):
-        price = random.randint(20,99)
-        products.append({"pk":i,'name': f'Product {i}', 'price': price, f'description':'Short product description'})
-    """
-    print(products)
     return render(request, template_name, {'products':products})
 
 def product_details(request, pk, template_name='story/product_details.html'):
     product = get_object_or_404(Product, pk=pk)
-    reviews =  [
-        {'rating':5, 'user':{'username':'Pedro Aguiar'}, 'comment':'Test'}
-    ] 
-
+    reviews =  [] 
+    #review_all = Review.objects.filter(product_id=product.pk)
+    review_all = Review.objects.all().order_by('-id')
+    for rw in review_all:
+        reviews.append({'rating':rw.rating, 'user':{'username':rw.created_by_user_id}, 'comment':rw.comment})
+        
     form = ReviewForm()
-
+    if  'form' in request.session:
+        form = ReviewForm(request.session['form'] or None)
+        del request.session['form']
+    
     return render(request, template_name, {'element': product, 'reviews':reviews, 'form':form})
+
+
+def product_review_create(request, pk, template_name="story/product_details.html"):
+    
+    review_handler = CreateReviewHandler(ReviewRepository())
+    review_service = ReviewApplicationService()
+    review_service.create_review_handler=review_handler
+    review_command = CreateReviewCommand()
+    
+    form = ReviewForm(request.POST or None)
+    product = get_object_or_404(Product, pk=pk) 
+    
+    if form.is_valid():           
+        content = form.cleaned_data['comment']
+        rating = form.cleaned_data['rating']
+        review_command.id = None
+        review_command.content = content
+        review_command.created_by_user_id = request.user.id
+        review_command.product_id = product.pk
+        review_command.rating = rating
+        review = review_service.create_review(review_command)
+        return redirect('product_details', pk=pk)
+    
+    else:
+        request.session['form'] = request.POST
+        
+    return redirect('product_details', pk=pk)
+
 
 def brand_list(request, template_name='product_brand/brand_list.html'):
     query = request.GET.get('search')
@@ -96,10 +127,6 @@ def brand_create(request, template_name="product_brand/brand_form.html"):
     
     form = ProductBrandForm(request.POST or None)
     if form.is_valid():
-        #prod_brand = form.save(commit=False)
-        #prod_brand.active='1'
-        #prod_brand.save()
-        
         name = form.cleaned_data['name']
         brand_command = CreateProductBrandCommand()
         brand_command.id = None
@@ -136,7 +163,6 @@ def brand_delete(request, pk, template_name="product_brand/delete_form.html"):
         item.delete()
         return redirect('brand_list')
     return render(request, template_name, {'item':item})
-
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Web Store index Project")

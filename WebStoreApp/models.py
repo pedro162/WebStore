@@ -22,6 +22,10 @@ class User(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True)
+    person_id = models.ForeignKey("Person", on_delete=models.CASCADE, null=True, default=None, related_name='persons')
+
+    def __str__(self) -> str:
+        return self.email
 
 class BaseModel(models.Model):
     ACTIVE_STORE = [
